@@ -24,15 +24,20 @@ class SDL2TTfConan(ConanFile):
 
 
     def source(self):
-        zip_name = "%s.tar.gz" % self.folder
-        download("https://www.libsdl.org/projects/SDL_ttf/release/%s" % zip_name, zip_name)
-        unzip(zip_name)
+        if self.settings.os != "Windows":
+            zip_name = "%s.tar.gz" % self.folder
+            download("https://www.libsdl.org/projects/SDL_ttf/release/%s" % zip_name, zip_name)
+            unzip(zip_name)
+        else:
+            print("WARNING: Using pre-built binaries on Windows")
 
     def build(self):
-        if self.settings.os == "Windows":
-            self.build_with_vs()
-        else:
+        if self.settings.os != "Windows":
             self.build_with_make()
+        else:
+            zip_name = "SDL2_ttf-devel-2.0.14-VC.zip"
+            download("https://www.libsdl.org/projects/SDL_ttf/release/%s" % zip_name, zip_name)
+            unzip(zip_name)
 
     def build_with_vs(self):
         env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
@@ -118,15 +123,15 @@ class SDL2TTfConan(ConanFile):
         """ Define your conan structure: headers, libs and data. After building your
             project, this method is called to create a defined structure:
         """
-        self.copy(pattern="SDL_ttf.h", dst="include", src="%s" % self.folder, keep_path=False)
-        self.copy(pattern="SDL_ttf.h", dst="include/SDL2", src="%s" % self.folder, keep_path=False)
+        self.copy(pattern="SDL_ttf.h", dst="include", src="%s/include" % self.folder, keep_path=False)
+        self.copy(pattern="SDL_ttf.h", dst="include/SDL2", src="%s/include" % self.folder, keep_path=False)
 
         if self.settings.os == "Windows":
-            self.copy(pattern="*.lib", dst="lib", src="%s" % self.folder, keep_path=False)
+            self.copy(pattern="*.lib", dst="lib", src="%s/lib/x64" % self.folder, keep_path=False)
             #Don't copy VERSION.dll because it is also provided by Windows and causes a verification error
-            self.copy(pattern="*_ttf.dll", dst="bin", src="%s" % self.folder, keep_path=False)
-            self.copy(pattern="*6.dll", dst="bin", src="%s" % self.folder, keep_path=False)
-            self.copy(pattern="*1.dll", dst="bin", src="%s" % self.folder, keep_path=False)
+            self.copy(pattern="*_ttf.dll", dst="bin", src="%s/lib/x64" % self.folder, keep_path=False)
+            self.copy(pattern="*6.dll", dst="bin", src="%s/lib/x64" % self.folder, keep_path=False)
+            self.copy(pattern="*1.dll", dst="bin", src="%s/lib/x64" % self.folder, keep_path=False)
         # UNIX
         elif self.options.shared:
             self.copy(pattern="*.a", dst="lib", src="%s" % self.folder, keep_path=False)
